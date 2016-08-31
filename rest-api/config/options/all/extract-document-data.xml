@@ -1,0 +1,5 @@
+<options xmlns="http://marklogic.com/appservices/search">
+  <extract-document-data>
+    <extract-path>//enrichment</extract-path>
+  </extract-document-data>
+</options>
