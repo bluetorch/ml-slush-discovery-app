@@ -236,5 +236,20 @@
             }
             ctrl.search();
         };
+
+        ctrl.updateSearchResults = function updateSearchResults(data) {
+            if (arguments[0] && arguments[0].results) {
+                arguments[0].results.forEach(function(result) {
+                    if (result.extracted && result.extracted.content[0]) {
+                        result.extracted.merged = {};
+                        result.extracted.content.forEach(function(content) {
+                            Object.assign(result.extracted.merged, content.enrichment);
+                        });
+                    }
+                });
+            }
+            superCtrl.updateSearchResults.apply(ctrl, arguments);
+        };
+
     }
 }());

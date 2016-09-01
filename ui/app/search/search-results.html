@@ -1,3 +1,21 @@
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>&nbsp;</th><th ng-repeat="(key, value) in results[0].extracted.merged" ng-hide="key === '_value'">{{key}}</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr ng-repeat="result in results">
+    <td>
+      <a ui-sref="root.view({uri: result.uri})">
+        <search-image doc-type="result.uri" image-type="'search'"></search-image>
+      </a>
+    </td>
+    <td ng-repeat="(key, value) in results[0].extracted.merged" ng-hide="key === '_value'">{{result.extracted.merged[key]}}</td>
+  </tr>
+  </tbody>
+</table>
+
 <div ng-repeat="result in results">
   <h4>
     <a ui-sref="root.view({uri: result.uri})"><search-image doc-type="result.uri" image-type="'search'"></search-image> {{ result['display-label'] || result.label || result.uri }}</a>
