@@ -8,7 +8,7 @@
     SearchCtrl.$inject = [
         '$scope', '$location', '$window',
         'userService', 'MLSearchFactory', 'RegisteredComponents',
-        'ServerConfig', 'MLQueryBuilder'
+        'ServerConfig', 'MLQueryBuilder', 'constraints'
     ];
 
     // inherit from MLSearchController
@@ -18,7 +18,7 @@
     function SearchCtrl(
         $scope, $location, $window,
         userService, searchFactory,
-        RegisteredComponents, ServerConfig, qb
+        RegisteredComponents, ServerConfig, qb, constraints
     ) {
         var ctrl = this;
         var mlSearch = searchFactory.newContext({
@@ -99,6 +99,7 @@
             MLSearchController.call(ctrl, $scope, $location, mlSearch);
 
             ctrl.init();
+            ctrl.constraints = ctrl.getConstraints();
         });
 
         // implement superCtrl extension method
@@ -239,11 +240,17 @@
 
         ctrl.updateSearchResults = function updateSearchResults(data) {
             if (arguments[0] && arguments[0].results) {
+                arguments[0].results[0].constraints = constraints;
                 arguments[0].results.forEach(function(result) {
                     if (result.extracted && result.extracted.content[0]) {
                         result.extracted.merged = {};
                         result.extracted.content.forEach(function(content) {
-                            Object.assign(result.extracted.merged, content.enrichment);
+                            for (var property in content) {
+                                if (content.hasOwnProperty(property)) {
+                                    result.extracted.merged[property] = content[property];
+                                }
+                            }
+                            //Object.assign(result.extracted.merged, content.enrichment);
                         });
                     }
                 });

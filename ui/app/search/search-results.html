@@ -1,7 +1,7 @@
 <table class="table table-striped">
   <thead>
     <tr>
-      <th>&nbsp;</th><th ng-repeat="(key, value) in results[0].extracted.merged" ng-hide="key === '_value'">{{key}}</th>
+      <th>&nbsp;</th><th ng-repeat="(key, value) in results[0].constraints" ng-hide="key === '_value'">{{key}}</th>
     </tr>
   </thead>
   <tbody>
@@ -11,7 +11,7 @@
         <search-image doc-type="result.uri" image-type="'search'"></search-image>
       </a>
     </td>
-    <td ng-repeat="(key, value) in results[0].extracted.merged" ng-hide="key === '_value'">{{result.extracted.merged[key]}}</td>
+    <td ng-repeat="(key, value) in results[0].constraints" ng-hide="key === '_value'">{{result.extracted.merged[value]}}</td>
   </tr>
   </tbody>
 </table>
