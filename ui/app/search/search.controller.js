@@ -6,9 +6,9 @@
         .controller('SearchCtrl', SearchCtrl);
 
     SearchCtrl.$inject = [
-        '$scope', '$location', '$window',
+        '$scope', '$location', '$window', '$filter',
         'userService', 'MLSearchFactory', 'RegisteredComponents',
-        'ServerConfig', 'MLQueryBuilder', 'constraints'
+        'ServerConfig', 'MLQueryBuilder', 'constraints', 'MLRest'
     ];
 
     // inherit from MLSearchController
@@ -16,15 +16,17 @@
     SearchCtrl.prototype = Object.create(superCtrl);
 
     function SearchCtrl(
-        $scope, $location, $window,
+        $scope, $location, $window, $filter,
         userService, searchFactory,
-        RegisteredComponents, ServerConfig, qb, constraints
+        RegisteredComponents, ServerConfig, qb, constraints, mlRest
     ) {
         var ctrl = this;
         var mlSearch = searchFactory.newContext({
             searchTransform: 'extract-json',
             queryOptions: 'all'
         });
+
+        ctrl.sort = [];
 
         mlSearch.setTransform('extract-json');
 
@@ -77,6 +79,7 @@
         };
 
         mlSearch.getStoredOptions().then(function(data) {
+            ctrl.queryOptions = angular.copy(data.options);
             ctrl.sortOptions = (_.filter(
                 data.options.operator,
                 function(val) {
@@ -99,7 +102,7 @@
             MLSearchController.call(ctrl, $scope, $location, mlSearch);
 
             ctrl.init();
-            ctrl.constraints = ctrl.getConstraints();
+            //ctrl.constraints = ctrl.getConstraints();
         });
 
         // implement superCtrl extension method
@@ -128,6 +131,33 @@
             return foundExtra;
         };
 
+        ctrl.toggleSort = function(constraint) {
+            var found = $filter('filter')(ctrl.sort, {
+                    name: constraint
+                }),
+                dir = 'ascending',
+                idx = -1;
+            if (found.length > 0) {
+                idx = ctrl.sort.indexOf(found[0]);
+                if (idx > -1) {
+                    ctrl.sort.splice(idx, 1);
+                }
+                if (found[0].direction === 'ascending') {
+                    dir = 'descending';
+                } else if (found[0].direction === 'descending') {
+                    dir = null;
+                }
+            }
+            if (dir !== null) {
+                ctrl.sort.unshift({
+                    name: constraint,
+                    direction: dir
+                });
+            }
+            ctrl.search();
+
+        };
+
         // implement superCtrl extension method
         ctrl.updateExtraURLParams = function() {
             angular.forEach(ctrl.pickerDateStart, function(val, key) {
@@ -145,6 +175,8 @@
         };
 
         ctrl._search = function() {
+            this.searchPending = true;
+            this.updateURLParams();
             ctrl.mlSearch.clearAdditionalQueries();
             for (var key in ctrl.dateFilters) {
                 if (ctrl.dateFilters[key] && ctrl.dateFilters[key].length) {
@@ -155,7 +187,50 @@
                     );
                 }
             }
-            superCtrl._search.call(ctrl);
+
+            var params = {
+                start: mlSearch.start,
+                pageLength: mlSearch.getPageLength(),
+                transform: mlSearch.getTransform(),
+                options: mlSearch.getQueryOptions(),
+            };
+
+            var combined = mlSearch.getCombinedQuerySync();
+
+            if (combined.search.options !== undefined && ctrl.sort.length > 0) {
+                delete combined.search.options['sort-order'];
+            } else if (ctrl.sort.length > 0) {
+              combined.search.options = { 'sort-order': []};
+            }
+
+            if (ctrl.sort.length > 0) {
+              console.log("Current sort: ", ctrl.sort);
+              var constraint;
+              ctrl.sort.forEach(function(item) {
+                constraint = $filter('filter')(ctrl.queryOptions.constraint, { name: item.name });
+                if (constraint.length > 0) {
+                  combined.search.options['sort-order'].push({
+                    direction: item.direction,
+                    element: constraint[0].range.element,
+                    attribute: constraint[0].range.attribute,
+                    field: constraint[0].range.field,
+                    'json-property': constraint[0].range['json-property']
+                  });
+                }
+              });
+            }
+
+            return mlRest.search(params, combined)
+                .then(function(response) {
+                    var results = response.data;
+
+                    mlSearch.transformMetadata(results.results);
+                    mlSearch.annotateActiveFacets(results.facets);
+
+                    return results;
+                })
+                .then(this.updateSearchResults.bind(this));
+
         };
 
         ctrl.openStartDatePicker = function(constraintName, $event) {
@@ -257,6 +332,10 @@
             }
             superCtrl.updateSearchResults.apply(ctrl, arguments);
         };
+
+        $scope.$on('sort', function(event, constraint) {
+            ctrl.toggleSort(constraint);
+        });
 
     }
 }());

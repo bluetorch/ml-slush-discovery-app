@@ -1,7 +1,14 @@
 <table class="table table-striped">
   <thead>
-    <tr>
-      <th>&nbsp;</th><th ng-repeat="(key, value) in results[0].constraints" ng-hide="key === '_value'">{{key}}</th>
+    <tr ng-init="sort = {}">
+      <th>&nbsp;</th>
+      <th
+        ng-repeat="(key, value) in results[0].constraints"
+        ng-hide="key === '_value'"
+        ng-click="$emit('sort',key);'ascending'===sort[key]?sort[key]='descending':'descending'===sort[key]?sort[key]='':sort[key]='ascending';">
+          <i ng-class="{ 'fa': true, 'fa-caret-up': sort[key] === 'descending', 'fa-caret-down': sort[key] === 'ascending'}"></i>
+          {{key}} {{sort[key]}}
+      </th>
     </tr>
   </thead>
   <tbody>

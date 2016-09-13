@@ -305,20 +305,39 @@
                 CommonUtil.moveArrayItem(model.constraints, index, newIndex);
             },
             submitConstraints: function() {
-                var constraints = [];
-                var extracted = [];
+                var constraints = [],
+                    extracted = [],
+                    sort = [],
+                    res = [],
+                    current;
                 angular.forEach(model.constraints, function(constraint) {
                     var newConstraint = angular.copy(constraint);
                     newConstraint.name = encodeURIComponent(constraint.name);
+                    if (newConstraint.sort) {
+                        sort.push({
+                            name: encodeURIComponent(newConstraint.name),
+                            'sort-order': [{
+                                direction: 'ascending',
+                                element: newConstraint.range.element,
+                                attribute: newConstraint.range.attribute,
+                                field: newConstraint.range.field,
+                                'json-property': newConstraint.range['json-property']
+                            }]
+                        });
+                    }
                     constraints.push(newConstraint);
                     if (newConstraint.range && newConstraint.range.element) {
                         extracted.push('//' + newConstraint.range.element.name);
                     }
                 });
+
                 model.searchOptions.options['extract-document-data'] = {
                     'extract-path': extracted
                 };
-                model.searchOptions.options.constraint = constraints;
+                model.searchOptions.options.constraint = angular.copy(constraints);
+                model.searchOptions.options.constraint.forEach(function(item) {
+                    delete item.sort;
+                });
                 ServerConfig.setSearchOptions(model.searchOptions).then(function() {
                     updateSearchResults().then(function() {
                         $scope.state = 'appearance';
