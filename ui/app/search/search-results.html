@@ -7,7 +7,7 @@
         ng-hide="key === '_value'"
         ng-click="$emit('sort',key);'ascending'===sort[key]?sort[key]='descending':'descending'===sort[key]?sort[key]='':sort[key]='ascending';">
           <i ng-class="{ 'fa': true, 'fa-caret-up': sort[key] === 'descending', 'fa-caret-down': sort[key] === 'ascending'}"></i>
-          {{key}} {{sort[key]}}
+          {{key}}
       </th>
     </tr>
   </thead>
