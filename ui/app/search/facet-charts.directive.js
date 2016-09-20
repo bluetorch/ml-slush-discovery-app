@@ -11,7 +11,7 @@
 
     function link(scope, element, attrs) {
       scope.options = scope.options || 'all';
-      scope.mlSearch = scope.mlSearch || searchFactory.newContext();
+      scope.mlSearch2 = scope.mlSearch || searchFactory.newContext();
       scope.reorderCharts = function(oldIndex, newIndex) {
         CommonUtil.moveArrayItem(scope.charts, oldIndex, newIndex);
         ServerConfig.setCharts({ charts: scope.charts});
@@ -31,7 +31,7 @@
       scope: {
         'removeChart': '=',
         'editChart': '=',
-        'mlSearch': '=',
+        'combinedQuery': '=',
         'searchOptions': '=',
         'charts': '=',
         'callback': '='

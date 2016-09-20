@@ -6,7 +6,7 @@
         .controller('SearchCtrl', SearchCtrl);
 
     SearchCtrl.$inject = [
-        '$scope', '$location', '$window', '$filter',
+        '$scope', '$location', '$window', '$filter', '$timeout',
         'userService', 'MLSearchFactory', 'RegisteredComponents',
         'ServerConfig', 'MLQueryBuilder', 'constraints', 'MLRest'
     ];
@@ -16,7 +16,7 @@
     SearchCtrl.prototype = Object.create(superCtrl);
 
     function SearchCtrl(
-        $scope, $location, $window, $filter,
+        $scope, $location, $window, $filter, $timeout,
         userService, searchFactory,
         RegisteredComponents, ServerConfig, qb, constraints, mlRest
     ) {
@@ -220,6 +220,10 @@
               });
             }
 
+            ctrl.combinedQuery = null;
+            $timeout(function() {
+              ctrl.combinedQuery = combined.search;
+            });
             return mlRest.search(params, combined)
                 .then(function(response) {
                     var results = response.data;
